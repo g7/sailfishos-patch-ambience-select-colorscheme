@@ -1,0 +1,132 @@
+Index: /usr/lib/qt5/qml/com/jolla/gallery/ambience/AmbienceSettingsView.qml
+===================================================================
+--- .orig/usr/lib/qt5/qml/com/jolla/gallery/ambience/AmbienceSettingsView.qml
++++ /usr/lib/qt5/qml/com/jolla/gallery/ambience/AmbienceSettingsView.qml
+@@ -67,6 +67,19 @@ SilicaListView {
+         QT_TRID_NOOP("jolla-gallery-ambience-la-light")
+     }
+ 
++    function changeColorScheme(ambience, colorScheme) {
++        if (colorScheme === ambience.colorScheme) {
++            return
++        }
++
++        ambience.colorScheme = colorScheme
++        ambience.primaryColor = colorScheme === Theme.LightOnDark ? "#FFFFFFFF" : "#FF000000"
++        ambience.secondaryColor = colorScheme === Theme.LightOnDark ? "#B0FFFFFF" : "#B0000000"
++        ambience.highlightColor = Theme.highlightFromColor(ambience.highlightColor, colorScheme)
++        ambience.secondaryHighlightColor = Theme.secondaryHighlightFromColor(ambience.secondaryHighlightColor, colorScheme)
++        ambience.changed()
++    }
++
+     function _unSupportedAction(prop) {
+         if (prop == "ringerTone" && !_hasVoiceCapability) {
+             return true
+@@ -391,6 +404,50 @@ SilicaListView {
+         }
+ 
+         SectionHeader {
++            //% "Style"
++            text: qsTrId("jolla-gallery-ambience-la-style")
++            color: root.highlightColor
++        }
++        Row {
++            width: parent.width
++            height: Theme.itemSizeLarge
++
++            StyleSelector {
++                id: darkStyleSelector
++
++                targetColorScheme: Theme.LightOnDark
++
++                colorScheme: ambience.colorScheme
++                highlightColor: ambience.highlightColor
++                secondaryHighlightColor: ambience.secondaryHighlightColor
++
++                //% "Dark"
++                text: qsTrId("jolla-gallery-ambience-la-dark")
++
++                width: parent.width / 2
++
++                onClicked: changeColorScheme(ambience, targetColorScheme)
++            }
++
++            StyleSelector {
++               id: lightStyleSelector
++
++               targetColorScheme: Theme.DarkOnLight
++
++               colorScheme: ambience.colorScheme
++               highlightColor: ambience.highlightColor
++               secondaryHighlightColor: ambience.secondaryHighlightColor
++
++               //% "Light"
++               text: qsTrId("jolla-gallery-ambience-la-light")
++
++               width: parent.width / 2
++
++             onClicked: changeColorScheme(ambience, targetColorScheme)
++            }
++        }
++
++        SectionHeader {
+             //% "Actions"
+             text: qsTrId("jolla-gallery-ambience-la-actions")
+             color: root.highlightColor
+Index: /usr/lib/qt5/qml/com/jolla/gallery/ambience/StyleSelector.qml
+===================================================================
+--- /dev/null
++++ /usr/lib/qt5/qml/com/jolla/gallery/ambience/StyleSelector.qml
+@@ -0,0 +1,52 @@
++import QtQuick 2.0
++import Sailfish.Silica 1.0
++import Sailfish.Ambience 1.0
++
++BackgroundItem {
++    id: styleSelector
++
++    property alias text: label.text
++
++    property int targetColorScheme: Theme.LightOnDark
++
++    property int colorScheme: Theme.LightOnDark
++    property color highlightColor: Theme.highlightColor
++    property color secondaryHighlightColor: Theme.secondaryHighlightColor
++
++    property color primaryColorPerAmbience: targetColorScheme === Theme.LightOnDark ? "#FFFFFFFF" : "#FF000000"
++    property color secondaryColorPerAmbience: targetColorScheme === Theme.LightOnDark ? "#B0FFFFFF" : "#B0000000"
++
++    property color highlightColorPerAmbience: colorScheme === targetColorScheme ?
++                                                  highlightColor :
++                                                  Theme.highlightFromColor(highlightColor, targetColorScheme)
++    property color secondaryHighlightColorPerAmbience: colorScheme === targetColorScheme ?
++                                                           secondaryHighlightColor :
++                                                           Theme.secondaryHighlightFromColor(secondaryHighlightColor, targetColorScheme)
++
++    property bool checked: colorScheme === targetColorScheme
++
++    highlightedColor: targetColorScheme === Theme.DarkOnLight ?
++                          Theme.rgba(Theme.highlightDimmerFromColor(highlightColorPerAmbience, targetColorScheme), 0.3) :
++                          Theme.rgba(Theme.highlightBackgroundFromColor(highlightColorPerAmbience, targetColorScheme), 0.6)
++
++    _backgroundColor: _showPress ?
++                          highlightedColor : Theme.rgba(Theme.highlightDimmerFromColor(highlightColorPerAmbience, targetColorScheme), "0.8")
++
++    Image {
++        id: selectedImage
++
++        source: "image://theme/icon-s-installed?" + primaryColorPerAmbience
++
++        visible: styleSelector.checked
++
++    }
++
++    Label {
++        id: label
++
++        text: qsTrId("jolla-gallery-ambience-la-dark")
++       	color: highlighted ? highlightColorPerAmbience : primaryColorPerAmbience
++        anchors.centerIn: parent
++    }
++
++}

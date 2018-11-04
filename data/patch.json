@@ -1,0 +1,8 @@
+{
+    "name": "Select color scheme in Ambiences",
+    "description": "This patch allows to select the color scheme per ambience.",
+	"category": "homescreen",
+	"infos": {
+		"maintainer": "Eugenio Paolantonio"
+	}
+}
